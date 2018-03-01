@@ -29,8 +29,26 @@ public class OpStack
         return currTop;
     }
 
-    public void push()
+    public Boolean push(OpNode OP)
     {
+        String bigOps = "*/";
         //this is the logic for whether you can add a OpNode to the stack
+        int priority = bigOps.indexOf(OP.getPayload()) > -1 ? 1 : 0;
+        OpNode temp = this.peek();
+        int priority2 = bigOps.indexOf(temp.getPayload()) > -1 ? 1 : 0;
+        if(priority == priority2)
+        {
+            return false;
+        }
+        else if(priority > priority2)
+        {
+            OP.setNextNode(this.top);
+            this.top = OP;
+            return true;
+        }
+        else
+        {
+            return false;
+        }
     }
 }

@@ -10,6 +10,8 @@ import java.util.StringTokenizer;
 public class MainActivity extends AppCompatActivity
 {
     private Queue q;
+    private Queue outQ;
+    private OpStack opStack;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -19,6 +21,8 @@ public class MainActivity extends AppCompatActivity
 
         //"10+3-2" -> turn into a queue of NumNodes and OpNodes
         this.q = new Queue();
+        this.outQ = new Queue();
+        this.opStack = new OpStack();
     }
 
     private String removeSpaces(String s)
@@ -92,6 +96,32 @@ public class MainActivity extends AppCompatActivity
             }
         }
         this.testQ();
+    }
+
+    public void fillQ()
+    {
+        Node n = this.q.dequeue();
+        while(n != null)
+        {
+            if (n instanceof NumNode)
+            {
+                this.outQ.enqueue(((NumNode) n).getPayload());
+            }
+            else
+            {
+                //try to push to the stack. If you can't, pop the top into the out queue and try again.
+                while (!opStack.push((OpNode) n))
+                {
+                    OpNode temp = opStack.pop();
+                    this.outQ.enqueue(temp.getPayload());
+                }
+            }
+            n = this.q.dequeue();
+        }
+        while(this.opStack.peek() != null)
+        {
+            this.q.enqueue(this.opStack.pop().getPayload());
+        }
     }
 
     public void onClickMeButtonPressed(View v)
