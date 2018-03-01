@@ -38,11 +38,11 @@ public class MainActivity extends AppCompatActivity
         return answer;
     }
 
-    private void testQ()
+    private void testQ(Queue cue)
     {
-        while(!this.q.isEmpty())
+        while(!cue.isEmpty())
         {
-            Node n = this.q.dequeue();
+            Node n = cue.dequeue();
             if(n instanceof NumNode)
             {
                 NumNode temp = (NumNode)n;
@@ -74,7 +74,7 @@ public class MainActivity extends AppCompatActivity
             }
         }
         this.q.enqueue(Integer.parseInt(currNumber));
-        this.testQ();
+        //this.testQ();
     }
 
     private void parseStringTok(String s)
@@ -95,14 +95,15 @@ public class MainActivity extends AppCompatActivity
                 this.q.enqueue(temp.charAt(0));
             }
         }
-        this.testQ();
+        this.testQ(this.q);
     }
 
     public void fillQ()
     {
-        Node n = this.q.dequeue();
-        while(n != null)
+        Node n;
+        while(!this.q.isEmpty())
         {
+            n = this.q.dequeue();
             if (n instanceof NumNode)
             {
                 this.outQ.enqueue(((NumNode) n).getPayload());
@@ -116,7 +117,6 @@ public class MainActivity extends AppCompatActivity
                     this.outQ.enqueue(temp.getPayload());
                 }
             }
-            n = this.q.dequeue();
         }
         while(this.opStack.peek() != null)
         {
@@ -129,5 +129,13 @@ public class MainActivity extends AppCompatActivity
         EditText inputET = (EditText)this.findViewById(R.id.inputET);
         String valueWithoutSpaces = this.removeSpaces(inputET.getText().toString());
         this.parseStringTok(inputET.getText().toString());
+    }
+
+    public void onFillMeButtonPressed(View v)
+    {
+        String input = this.findViewById(R.id.inputET).toString();
+        this.parseString(this.removeSpaces(input));
+        this.fillQ();
+        this.testQ(this.outQ);
     }
 }
