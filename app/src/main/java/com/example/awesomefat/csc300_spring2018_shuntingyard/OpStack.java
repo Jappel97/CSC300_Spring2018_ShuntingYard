@@ -29,26 +29,33 @@ public class OpStack
         return currTop;
     }
 
-    public Boolean push(OpNode OP)
+    public void clearOpStack(Queue outputQ)
     {
-        String bigOps = "*/";
-        //this is the logic for whether you can add a OpNode to the stack
-        int priority = bigOps.indexOf(OP.getPayload()) > -1 ? 1 : 0;
-        OpNode temp = this.peek();
-        int priority2 = bigOps.indexOf(temp.getPayload()) > -1 ? 1 : 0;
-        if(priority == priority2)
+        while(this.top != null)
         {
-            return false;
+            outputQ.enqueue(this.pop());
         }
-        else if(priority > priority2)
+    }
+
+    public void push(OpNode op, Queue outputQ)
+    {
+        //this is the logic for whether you can add a OpNode to the stack
+
+        //clear the stack until it is a legal move
+        while(this.peek() != null && this.peek().getPriority() >= op.getPriority())
         {
-            OP.setNextNode(this.top);
-            this.top = OP;
-            return true;
+            outputQ.enqueue(this.pop());
+        }
+
+        //push op onto top of stack
+        if(this.top == null)
+        {
+            this.top = op;
         }
         else
         {
-            return false;
+            op.setNextNode(this.top);
+            this.top = op;
         }
     }
 }

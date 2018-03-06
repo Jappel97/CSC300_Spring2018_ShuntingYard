@@ -28,5 +28,11 @@
             android:layout_height="wrap_content"
             android:onClick="onClickMeButtonPressed"
             android:text="Click Me" />
+
+        <TextView
+            android:id="@+id/Answer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Answer" />
     </LinearLayout>
 </android.support.constraint.ConstraintLayout>

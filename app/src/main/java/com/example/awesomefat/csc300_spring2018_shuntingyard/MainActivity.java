@@ -4,25 +4,30 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.TextView;
 
 import java.util.StringTokenizer;
 
 public class MainActivity extends AppCompatActivity
 {
-    private Queue q;
-    private Queue outQ;
+    private Queue inputQ;
     private OpStack opStack;
+    private Queue outputQ;
+    private Stack solStack;
+    private TextView answer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        answer = this.findViewById(R.id.Answer);
 
         //"10+3-2" -> turn into a queue of NumNodes and OpNodes
-        this.q = new Queue();
-        this.outQ = new Queue();
+        this.inputQ = new Queue();
+        this.outputQ = new Queue();
         this.opStack = new OpStack();
+        this.solStack = new Stack();
     }
 
     private String removeSpaces(String s)
@@ -38,11 +43,11 @@ public class MainActivity extends AppCompatActivity
         return answer;
     }
 
-    private void testQ(Queue cue)
+    private void testQ(Queue q)
     {
-        while(!cue.isEmpty())
+        while(!q.isEmpty())
         {
-            Node n = cue.dequeue();
+            Node n = q.dequeue();
             if(n instanceof NumNode)
             {
                 NumNode temp = (NumNode)n;
@@ -68,16 +73,16 @@ public class MainActivity extends AppCompatActivity
             }
             else
             {
-                this.q.enqueue(Integer.parseInt(currNumber));
+                this.inputQ.enqueue(Integer.parseInt(currNumber));
                 currNumber = "";
-                this.q.enqueue(s.charAt(i));
+                this.inputQ.enqueue(s.charAt(i));
             }
         }
-        this.q.enqueue(Integer.parseInt(currNumber));
-        //this.testQ();
+        this.inputQ.enqueue(Integer.parseInt(currNumber));
+        this.testQ(this.inputQ);
     }
 
-    private void parseStringTok(String s)
+    private void fillInputQ(String s)
     {
         StringTokenizer st = new StringTokenizer(s,"+-*/", true);
         String temp;
@@ -87,55 +92,76 @@ public class MainActivity extends AppCompatActivity
             temp = st.nextToken().trim();
             if(ops.indexOf(temp.charAt(0)) == -1)
             {
-                this.q.enqueue(Integer.parseInt(temp));
+                this.inputQ.enqueue(Integer.parseInt(temp));
             }
             else
             {
                 //"+" -> '+'
-                this.q.enqueue(temp.charAt(0));
+                this.inputQ.enqueue(temp.charAt(0));
             }
         }
-        this.testQ(this.q);
+        //this.testQ(this.inputQ);
     }
 
-    public void fillQ()
+    private void processInputQ()
     {
-        Node n;
-        while(!this.q.isEmpty())
+        Node currNode;
+        while(!this.inputQ.isEmpty())
         {
-            n = this.q.dequeue();
-            if (n instanceof NumNode)
+            currNode = this.inputQ.dequeue();
+            if(currNode instanceof NumNode)
             {
-                this.outQ.enqueue(((NumNode) n).getPayload());
+                this.outputQ.enqueue((NumNode)currNode);
             }
             else
             {
-                //try to push to the stack. If you can't, pop the top into the out queue and try again.
-                while (!opStack.push((OpNode) n))
-                {
-                    OpNode temp = opStack.pop();
-                    this.outQ.enqueue(temp.getPayload());
-                }
+                this.opStack.push((OpNode)currNode, this.outputQ);
             }
         }
-        while(this.opStack.peek() != null)
-        {
-            this.q.enqueue(this.opStack.pop().getPayload());
-        }
+        this.opStack.clearOpStack(this.outputQ);
     }
 
+    private void processOutputQueue()
+    {
+        //ultimately show the answer on the screen
+        while(!outputQ.isEmpty())
+        {
+            Node temp = outputQ.dequeue();
+            if(temp instanceof NumNode)
+            {
+                solStack.push((NumNode) temp, solStack);
+            }
+            else if(temp instanceof OpNode)
+            {
+                NumNode thing = new NumNode(doMath((OpNode) temp, solStack.pop(solStack), solStack.pop(solStack)));
+                solStack.push(thing, solStack);
+            }
+        }
+        answer.setText(solStack.getTop());
+    }
     public void onClickMeButtonPressed(View v)
     {
         EditText inputET = (EditText)this.findViewById(R.id.inputET);
         String valueWithoutSpaces = this.removeSpaces(inputET.getText().toString());
-        this.parseStringTok(inputET.getText().toString());
+        this.fillInputQ(inputET.getText().toString());
+        this.processInputQ();
+        this.testQ(this.outputQ);
     }
 
-    public void onFillMeButtonPressed(View v)
+    private int doMath(OpNode op, NumNode R1, NumNode R2)
     {
-        String input = this.findViewById(R.id.inputET).toString();
-        this.parseString(this.removeSpaces(input));
-        this.fillQ();
-        this.testQ(this.outQ);
+        char op1 = op.getPayload();
+        int Reg1 = R1.getPayload();
+        int Reg2 = R2.getPayload();
+        if(op1 == '+')
+            return Reg1 + Reg2;
+        else if(op1 == '-')
+            return Reg2 - Reg1;
+        else if(op1 == '*')
+            return Reg1*Reg2;
+        else if(op1 == '/')
+            return Reg2/Reg1;
+        else
+            return -1;
     }
 }
